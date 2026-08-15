@@ -38,9 +38,18 @@ pipeline {
                 '''
             }
         }
-        stage('test'){
-            steps{
-                echo 'test success'
+        stage('SonarQube Analysis'){
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        stage('SonarQube Quality Gates'){
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
         stage('deployment'){
