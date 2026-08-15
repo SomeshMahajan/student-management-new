@@ -61,6 +61,17 @@ pipeline {
             }
         }
 
+        stage('docker push to ECR') {
+            steps {
+
+                sh '''
+                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 800380166958.dkr.ecr.ap-south-1.amazonaws.com
+                docker tag student:latest 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
+                docker push 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
+                '''
+            }
+        }
+
         stage('deployment'){
             steps{
                 echo 'deployment success'
