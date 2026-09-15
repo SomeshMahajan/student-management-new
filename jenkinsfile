@@ -32,6 +32,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Artifact to s3'){
             steps {
                 sh '''
@@ -39,6 +40,7 @@ pipeline {
                 '''
             }
         }
+        
         stage('SonarQube Analysis'){
             steps {
                 withSonarQubeEnv('sonar') {
@@ -46,11 +48,31 @@ pipeline {
                 }
             }
         }
+        
         stage('SonarQube Quality Gates'){
             steps {
                 timeout(time:5, unit: 'MINUTES'){
                     waitForQualityGate abortPipeline: true
                 }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                sh '''
+                docker build --no-cache -t studentapp:latest .
+                docker images
+                '''
+            }
+        }
+
+        stage('push image to ECR') {
+            steps {
+                sh '''
+                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student
+                docker tag studentapp:latest 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
+                docker push 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
+                '''
             }
         }
     }
