@@ -10,7 +10,7 @@ pipeline {
         maven "maven"
     }
     stages {
-        stage("checkout"){
+        stage("checkout") {
             steps{
                 git branch: 'main', url: 'https://github.com/SomeshMahajan/student-management-new.git'
                 sh '''
@@ -18,11 +18,12 @@ pipeline {
                 '''
             }
         }
+
         stage('build'){
             steps{
                 sh '''
                 mvn clean package
-                echo 'build success'
+                echo 'build is successful'
                 '''
             }
             post {
@@ -31,50 +32,11 @@ pipeline {
                 }
             }
         }
-        stage('Artifact to S3'){
+        stage('Artifact to s3'){
             steps {
                 sh '''
-                aws s3 cp target/*.war s3://mayurcbz.space/Artifact/student.war
+                aws s3 cp target/*.war s3://stairs-to-cloud.space/Artifact/student.war
                 '''
-            }
-        }
-        stage('SonarQube Analysis'){
-            steps {
-                withSonarQubeEnv('sonar') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
-        stage('SonarQube Quality Gates'){
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-        stage('Docker Build'){
-            steps {
-                sh '''
-                docker build -t student:latest .
-                docker images
-                '''
-            }
-        }
-
-        stage('docker push to ECR') {
-            steps {
-
-                sh '''
-                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 800380166958.dkr.ecr.ap-south-1.amazonaws.com
-                docker tag student:latest 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
-                docker push 800380166958.dkr.ecr.ap-south-1.amazonaws.com/student:latest
-                '''
-            }
-        }
-
-        stage('deployment'){
-            steps{
-                echo 'deployment success'
             }
         }
     }
